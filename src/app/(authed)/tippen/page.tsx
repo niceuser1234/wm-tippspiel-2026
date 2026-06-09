@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { MatchTipCard } from "@/components/match-tip-card";
 import { SpecialBetCard } from "@/components/special-bet-card";
 import type { Match, MatchTip, SpecialBet, SpecialBetTip } from "@/types/database";
+
+export const metadata: Metadata = {
+  title: "Tippen | WM 2026 Tippspiel",
+};
 
 export default async function TippenPage() {
   const supabase = await createClient();
@@ -52,7 +57,7 @@ export default async function TippenPage() {
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-black italic text-[#0f172a]">
+        <h1 className="display-heading text-2xl text-night">
           ⚽ Tippen
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
@@ -67,7 +72,7 @@ export default async function TippenPage() {
           </p>
           <Link
             href="/uebersicht"
-            className="text-sm text-[#15803d] font-medium underline underline-offset-4"
+            className="text-sm text-primary font-medium underline underline-offset-4"
           >
             Zur Übersicht →
           </Link>
@@ -76,7 +81,7 @@ export default async function TippenPage() {
         <div className="flex flex-col gap-8">
           {matches.length > 0 && (
             <section>
-              <h2 className="text-base font-bold text-[#0f172a] mb-3">
+              <h2 className="text-base font-bold text-night mb-3">
                 Spieltipps
               </h2>
               <div className="flex flex-col gap-3">
@@ -93,7 +98,7 @@ export default async function TippenPage() {
 
           {bets.length > 0 && (
             <section>
-              <h2 className="text-base font-bold text-[#0f172a] mb-3">
+              <h2 className="text-base font-bold text-night mb-3">
                 Sonderwetten
               </h2>
               <div className="flex flex-col gap-3">

@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { MatchRevealCard } from "@/components/match-reveal-card";
 import { teamLabel } from "@/lib/teams";
 import type { Match, SpecialBet } from "@/types/database";
+
+export const metadata: Metadata = {
+  title: "Übersicht | WM 2026 Tippspiel",
+};
 
 // ---- Typen für JOINed Abfragen ----
 
@@ -122,9 +127,27 @@ export default async function UebersichtPage() {
     return tip ? { home_tip: tip.home_tip, away_tip: tip.away_tip } : null;
   }
 
+  // Alle Spiele haben noch kein Ergebnis UND keines hat begonnen → freundlicher Hinweis
+  const allScoresNull =
+    matches.length > 0 &&
+    matches.every((m) => m.home_score === null && m.away_score === null) &&
+    upcoming.length === matches.length;
+
   return (
     <div className="px-4 py-6 max-w-xl mx-auto">
       <h1 className="display-heading text-2xl text-night mb-6">📋 Übersicht</h1>
+
+      {allScoresNull && (
+        <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-5 text-center">
+          <p className="text-2xl mb-1">⚽</p>
+          <p className="font-semibold text-night text-sm">
+            Die Spiele starten am 11. Juni
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Danach werden hier alle Tipps aufgedeckt.
+          </p>
+        </div>
+      )}
 
       {/* ---- Laufende & abgeschlossene Spiele ---- */}
       {started.length > 0 && (

@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   title: "WM 2026 Tippspiel",
   description:
     "Privates Tippspiel zur FIFA Weltmeisterschaft 2026 — tippen, zittern, Topf gewinnen.",
+  openGraph: {
+    title: "WM 2026 Tippspiel",
+    description: "Tippen. Zittern. Topf gewinnen.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

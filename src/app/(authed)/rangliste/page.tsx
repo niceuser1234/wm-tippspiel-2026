@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { LeaderboardTable } from "@/components/leaderboard-table";
+
+export const metadata: Metadata = {
+  title: "Rangliste | WM 2026 Tippspiel",
+};
 
 export default async function RanglistePage() {
   const supabase = await createClient();
@@ -17,7 +22,7 @@ export default async function RanglistePage() {
   const currentUserId = user?.id ?? null;
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 max-w-lg mx-auto">
       <h1 className="display-heading text-2xl text-night mb-6">🏆 Rangliste</h1>
 
       {error || !rows || rows.length === 0 ? (

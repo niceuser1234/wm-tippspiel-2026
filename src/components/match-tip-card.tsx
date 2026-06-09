@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
-import { flagFor } from "@/lib/teams";
+import { teamLabel } from "@/lib/teams";
 import type { Match, MatchTip } from "@/types/database";
 
 interface Props {
@@ -149,11 +149,11 @@ export function MatchTipCard({ match, existingTip }: Props) {
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <span className="text-sm font-semibold text-right leading-tight">
-            {flagFor(match.home_team)} {match.home_team}
+            {teamLabel(match.home_team)}
           </span>
           <span className="text-muted-foreground font-bold">:</span>
           <span className="text-sm font-semibold leading-tight">
-            {flagFor(match.away_team)} {match.away_team}
+            {teamLabel(match.away_team)}
           </span>
         </div>
 
