@@ -6,9 +6,10 @@ import type { Database } from "@/types/database";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
-  const type = searchParams.get("type") as EmailOtpType | null;
+  // type aus URL nutzen falls vorhanden, sonst 'email' als Fallback für magic links
+  const type = (searchParams.get("type") ?? "email") as EmailOtpType;
 
-  if (!token_hash || !type) {
+  if (!token_hash) {
     return NextResponse.redirect(new URL("/?error=auth", origin));
   }
 
