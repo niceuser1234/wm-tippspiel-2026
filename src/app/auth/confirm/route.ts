@@ -6,42 +6,53 @@ import type { Database } from "@/types/database";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
-  // type aus URL nutzen falls vorhanden, sonst 'email' als Fallback für magic links
-  const type = (searchParams.get("type") ?? "email") as EmailOtpType;
+  const type = (searchParams.get("type") ?? "magiclink") as EmailOtpType;
+  const code = searchParams.get("code");
 
-  if (!token_hash) {
-    return NextResponse.redirect(new URL("/?error=auth", origin));
+  // Alle URL-Parameter für Debugging erfassen
+  const allParams = Object.fromEntries(searchParams.entries());
+
+  // PKCE-Flow: exchangeCodeForSession wenn 'code' vorhanden
+  if (code) {
+    const response = NextResponse.redirect(new URL("/tippen", origin));
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookies) => cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
+        },
+      }
+    );
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) return response;
+    return NextResponse.redirect(new URL(`/?error=auth&detail=code_exchange_failed`, origin));
   }
 
-  // Route Handler: Cookies auf der Response setzen, nicht nur auf dem Request.
-  // createClient() aus server.ts schreibt in next/headers cookieStore,
-  // der in Route Handlers zwar writable ist, aber die gesetzten Cookies
-  // nicht automatisch in NextResponse.redirect() überträgt.
-  // Deshalb hier manuell mit Response-Cookies arbeiten.
-  const response = NextResponse.redirect(new URL("/tippen", origin));
+  // OTP-Flow: verifyOtp mit token_hash
+  if (token_hash) {
+    const response = NextResponse.redirect(new URL("/tippen", origin));
+    const supabase = createServerClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookies) => cookies.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
+        },
+      }
+    );
+    const { error } = await supabase.auth.verifyOtp({ type, token_hash });
+    if (!error) return response;
+    // Fehlerdetail in URL für Debugging
+    return NextResponse.redirect(
+      new URL(`/?error=auth&detail=${encodeURIComponent(error.message)}&code=${error.status}`, origin)
+    );
+  }
 
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
-        },
-      },
-    }
+  // Kein Token — alle Parameter loggen
+  return NextResponse.redirect(
+    new URL(`/?error=auth&detail=no_token&params=${encodeURIComponent(JSON.stringify(allParams))}`, origin)
   );
-
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash });
-
-  if (error) {
-    return NextResponse.redirect(new URL("/?error=auth", origin));
-  }
-
-  return response;
 }

@@ -12,6 +12,7 @@ import { Suspense } from "react";
 function LoginForm() {
   const searchParams = useSearchParams();
   const expiredLink = searchParams.get("error") === "auth";
+  const errorDetail = searchParams.get("detail");
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,8 +58,11 @@ function LoginForm() {
 
         {/* Abgelaufener Link Hinweis */}
         {expiredLink && (
-          <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive text-center">
-            Link abgelaufen — fordere einen neuen an.
+          <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive text-center space-y-1">
+            <p>Link abgelaufen — fordere einen neuen an.</p>
+            {errorDetail && (
+              <p className="text-xs opacity-70 break-all">{errorDetail}</p>
+            )}
           </div>
         )}
 
