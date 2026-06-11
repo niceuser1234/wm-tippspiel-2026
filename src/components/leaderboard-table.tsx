@@ -22,23 +22,22 @@ export function LeaderboardTable({
     rank: number;
   }
 
-  const rowsWithRanks: RowWithRank[] = rows.map((row, index) => {
-    // Rangtiebreaker: total_points DESC, exact_count DESC (bereits sortiert von der View)
-    // Zwei Spieler mit exakt gleichen Werten bekommen denselben Rang
-    let rank = index + 1;
-    if (index > 0) {
-      const prev = rows[index - 1];
-      const curr = rows[index];
-      // Wenn Werte identisch, übernimm Rang des Vorgängers
+  // for-Loop statt map(): rowsWithRanks[i-1] muss lesbar sein bevor das Array fertig ist
+  const rowsWithRanks: RowWithRank[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    let rank = i + 1;
+    if (i > 0) {
+      const prev = rows[i - 1];
       if (
-        prev.total_points === curr.total_points &&
-        prev.exact_count === curr.exact_count
+        prev.total_points === row.total_points &&
+        prev.exact_count === row.exact_count
       ) {
-        rank = (rowsWithRanks[index - 1] as RowWithRank).rank;
+        rank = rowsWithRanks[i - 1].rank;
       }
     }
-    return { ...row, rank };
-  });
+    rowsWithRanks.push({ ...row, rank });
+  }
 
   const getMedalOrRank = (rank: number): string => {
     switch (rank) {
