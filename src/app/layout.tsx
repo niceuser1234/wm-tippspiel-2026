@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://wm-2026-tippspiel.vercel.app"),
+  metadataBase: new URL("https://tippspiel-haberstroh.vercel.app"),
   title: "WM 2026 Tippspiel",
   description:
     "Tippspiel zur FIFA Weltmeisterschaft 2026 — tippen, zittern, Topf gewinnen. Haberstroh & Friends.",
