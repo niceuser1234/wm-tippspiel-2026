@@ -23,6 +23,7 @@ const FREE_TEXT_SENTINEL = "__freitext__";
 interface Props {
   bet: SpecialBet;
   existingAnswer: string | null;
+  onSaved?: (betId: string) => void;
 }
 
 function formatDeadline(lockAt: string): string {
@@ -50,7 +51,7 @@ function parseTwoTeams(answer: string | null): [string, string] {
   return ["", ""];
 }
 
-export function SpecialBetCard({ bet, existingAnswer }: Props) {
+export function SpecialBetCard({ bet, existingAnswer, onSaved }: Props) {
   const initialFreeText =
     bet.bet_type === "text" &&
     existingAnswer !== null &&
@@ -148,6 +149,7 @@ export function SpecialBetCard({ bet, existingAnswer }: Props) {
     // Erfolg → Gespeichert-Ansicht zeigen
     setSavedAnswer(answer);
     setEditing(false);
+    onSaved?.(bet.id);
     toast.success("✅ Tipp gespeichert");
   }
 

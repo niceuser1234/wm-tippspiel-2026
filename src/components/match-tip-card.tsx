@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import type { Match, MatchTip } from "@/types/database";
 interface Props {
   match: Match;
   existingTip: MatchTip | null;
+  onSaved?: (matchId: string) => void;
 }
 
 function formatKickoff(kickoffAt: string): string {
@@ -80,61 +81,67 @@ function Stepper({
   );
 }
 
-export function MatchTipCard({ match, existingTip }: Props) {
+export function MatchTipCard({ match, existingTip, onSaved }: Props) {
   const [homeTip, setHomeTip] = useState(existingTip?.home_tip ?? 0);
   const [awayTip, setAwayTip] = useState(existingTip?.away_tip ?? 0);
   const [saving, setSaving] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const save = useCallback(
-    async (home: number, away: number) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(async () => {
-        setSaving(true);
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { error } = await supabase.from("match_tips").upsert(
-          {
-            user_id: user.id,
-            match_id: match.id,
-            home_tip: home,
-            away_tip: away,
-          },
-          { onConflict: "user_id,match_id" }
-        );
-
-        setSaving(false);
-
-        if (error) {
-          if (
-            error.code === "42501" ||
-            error.code === "PGRST301" ||
-            error.message?.includes("row-level security")
-          ) {
-            toast.error("❌ Spiel bereits gestartet");
-          } else {
-            toast.error("❌ Fehler beim Speichern");
-          }
-        } else {
-          toast.success("✅ Tipp gespeichert");
-        }
-      }, 500);
-    },
-    [match.id]
+  // Gespeicherter Tipp + Bearbeitungsmodus steuern die Ansicht.
+  const [saved, setSaved] = useState<{ home: number; away: number } | null>(
+    existingTip ? { home: existingTip.home_tip, away: existingTip.away_tip } : null
   );
+  const [editing, setEditing] = useState(false);
 
-  function handleHome(v: number) {
-    setHomeTip(v);
-    save(v, awayTip);
+  const showForm = saved === null || editing;
+
+  async function handleSave() {
+    setSaving(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      return;
+    }
+
+    const { error } = await supabase.from("match_tips").upsert(
+      {
+        user_id: user.id,
+        match_id: match.id,
+        home_tip: homeTip,
+        away_tip: awayTip,
+      },
+      { onConflict: "user_id,match_id" }
+    );
+
+    setSaving(false);
+
+    if (error) {
+      if (
+        error.code === "42501" ||
+        error.code === "PGRST301" ||
+        error.message?.includes("row-level security")
+      ) {
+        toast.error("❌ Spiel bereits gestartet");
+      } else {
+        toast.error("❌ Fehler beim Speichern");
+      }
+      return;
+    }
+
+    setSaved({ home: homeTip, away: awayTip });
+    setEditing(false);
+    onSaved?.(match.id);
+    toast.success("✅ Tipp gespeichert");
   }
 
-  function handleAway(v: number) {
-    setAwayTip(v);
-    save(homeTip, v);
+  function handleCancel() {
+    if (saved) {
+      setHomeTip(saved.home);
+      setAwayTip(saved.away);
+    }
+    setEditing(false);
   }
 
   return (
@@ -163,16 +170,56 @@ export function MatchTipCard({ match, existingTip }: Props) {
           </div>
         </div>
 
-        <div className="flex justify-around items-center pt-1">
-          <Stepper value={homeTip} onChange={handleHome} label="Heim" />
-          <div className="text-2xl font-black text-muted-foreground">–</div>
-          <Stepper value={awayTip} onChange={handleAway} label="Gast" />
-        </div>
+        {showForm ? (
+          <>
+            <div className="flex justify-around items-center pt-1">
+              <Stepper value={homeTip} onChange={setHomeTip} label="Heim" />
+              <div className="text-2xl font-black text-muted-foreground">–</div>
+              <Stepper value={awayTip} onChange={setAwayTip} label="Gast" />
+            </div>
 
-        {saving && (
-          <p className="text-xs text-center text-muted-foreground animate-pulse">
-            Speichern…
-          </p>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full bg-[#15803d] hover:bg-[#166534] text-white"
+            >
+              {saving
+                ? "Speichern…"
+                : saved
+                ? "Änderung speichern"
+                : "Tipp speichern"}
+            </Button>
+
+            {saved && !saving && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="text-xs text-muted-foreground underline underline-offset-4 mx-auto"
+              >
+                Abbrechen
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-3 pt-1">
+            <div className="flex items-center justify-center gap-2.5 rounded-xl bg-green-50 border border-green-200 px-3 py-2.5">
+              <span className="text-base leading-none">✅</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-green-600">
+                Dein Tipp
+              </span>
+              <span className="text-xl font-black tabular-nums text-night">
+                {saved!.home} : {saved!.away}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditing(true)}
+              className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Tipp ändern
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
