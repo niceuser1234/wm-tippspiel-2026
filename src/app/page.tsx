@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,42 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Mobile-Autoplay erzwingen: React setzt das `muted`-Property nicht zuverlässig,
+  // ohne echtes Muting blockieren iOS/Android das Autoplay. Property hart setzen
+  // + play() aktiv aufrufen, mit Fallback bei erster Interaktion / Sichtbarkeit.
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    v.muted = true;
+    v.defaultMuted = true;
+    v.setAttribute("muted", "");
+    v.setAttribute("playsinline", "true");
+    v.setAttribute("webkit-playsinline", "true");
+
+    const tryPlay = () => {
+      const p = v.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+    tryPlay();
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") tryPlay();
+    };
+    const onInteract = () => tryPlay();
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("touchstart", onInteract, { once: true, passive: true });
+    window.addEventListener("pointerdown", onInteract, { once: true });
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("touchstart", onInteract);
+      window.removeEventListener("pointerdown", onInteract);
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,11 +81,13 @@ function LoginForm() {
       {/* Hintergrund-Video — nur auf der Login-Page. z-0 (nicht negativ),
           sonst verdeckt der body-Hintergrund das Video. */}
       <video
+        ref={videoRef}
         className="fixed left-0 top-0 z-0 h-[100dvh] w-[100vw] object-cover"
         autoPlay
         loop
         muted
         playsInline
+        preload="auto"
         aria-hidden="true"
       >
         <source src="/flags-loop.mp4" type="video/mp4" />
