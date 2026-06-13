@@ -128,10 +128,10 @@ export default async function UebersichtPage() {
         <div className="mb-8 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-5 text-center">
           <p className="text-2xl mb-1">⚽</p>
           <p className="font-semibold text-night text-sm">
-            Die Spiele starten am 11. Juni
+            Los geht&apos;s am 14. Juni um 19:00 Uhr — Deutschland 🇩🇪 gegen Curaçao 🇨🇼
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Danach werden hier alle Tipps aufgedeckt.
+            Bis zum Anpfiff bleiben alle Tipps geheim. Danach wird hier aufgedeckt, wer was getippt hat.
           </p>
         </div>
       )}
@@ -178,7 +178,7 @@ export default async function UebersichtPage() {
 
       {matches.length === 0 && (
         <p className="text-muted-foreground text-sm py-8 text-center">
-          Noch keine Spiele eingetragen. Ab dem 11. Juni geht&apos;s los! ⚽
+          Noch keine Spiele eingetragen. Am 14. Juni geht&apos;s los! ⚽
         </p>
       )}
 
