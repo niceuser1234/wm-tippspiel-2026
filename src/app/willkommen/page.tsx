@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,68 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const MAX_LEN = 30;
+const AVATAR_SIZE = 256; // Zielkantenlänge des quadratischen Avatars
+
+/** Bild laden, mittig quadratisch zuschneiden, auf AVATAR_SIZE skalieren → WebP-Blob. */
+async function resizeToSquareWebp(file: File): Promise<Blob> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden"));
+    reader.readAsDataURL(file);
+  });
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("Bild konnte nicht geladen werden"));
+    i.src = dataUrl;
+  });
+
+  const side = Math.min(img.width, img.height);
+  const sx = (img.width - side) / 2;
+  const sy = (img.height - side) / 2;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = AVATAR_SIZE;
+  canvas.height = AVATAR_SIZE;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas nicht verfügbar");
+  ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("Konvertierung fehlgeschlagen"))),
+      "image/webp",
+      0.85
+    );
+  });
+}
 
 export default function WillkommenPage() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      setError("Bitte wähle eine Bilddatei.");
+      return;
+    }
+    if (f.size > 10 * 1024 * 1024) {
+      setError("Bild ist zu groß (max. 10 MB).");
+      return;
+    }
+    setError(null);
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,6 +82,10 @@ export default function WillkommenPage() {
     }
     if (trimmed.length > MAX_LEN) {
       setError(`Maximal ${MAX_LEN} Zeichen erlaubt.`);
+      return;
+    }
+    if (!file) {
+      setError("Bitte lade ein Profilbild hoch.");
       return;
     }
 
@@ -43,18 +103,42 @@ export default function WillkommenPage() {
       return;
     }
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ display_name: trimmed })
-      .eq("id", user.id);
+    try {
+      // 1. Bild verkleinern + hochladen
+      const blob = await resizeToSquareWebp(file);
+      const path = `${user.id}/${Date.now()}.webp`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { contentType: "image/webp", upsert: true });
 
-    if (updateError) {
-      setError("Konnte nicht gespeichert werden. Versuch's nochmal.");
+      if (uploadError) {
+        setError("Bild-Upload fehlgeschlagen. Versuch's nochmal.");
+        setLoading(false);
+        return;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(path);
+
+      // 2. Profil aktualisieren (Name + Bild-URL)
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ display_name: trimmed, avatar_url: publicUrl })
+        .eq("id", user.id);
+
+      if (updateError) {
+        setError("Konnte nicht gespeichert werden. Versuch's nochmal.");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/tippen");
+      router.refresh();
+    } catch {
+      setError("Etwas ist schiefgelaufen. Versuch's nochmal.");
       setLoading(false);
-      return;
     }
-
-    router.push("/tippen");
   }
 
   return (
@@ -70,13 +154,49 @@ export default function WillkommenPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Dein Anzeigename</CardTitle>
+            <CardTitle>Dein Profil</CardTitle>
             <CardDescription>
-              So sehen dich die anderen in der Rangliste.
+              Name &amp; Bild sehen alle in Rangliste und Übersicht.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Profilbild */}
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="relative h-24 w-24 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden hover:border-[#15803d] transition-colors"
+                  aria-label="Profilbild auswählen"
+                >
+                  {preview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={preview}
+                      alt="Vorschau"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl">📷</span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="text-sm font-medium text-[#15803d] underline underline-offset-4"
+                >
+                  {preview ? "Anderes Bild wählen" : "Profilbild hochladen"}
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="displayName">
                   Wie sollen dich die anderen nennen?
@@ -89,21 +209,18 @@ export default function WillkommenPage() {
                   onChange={(e) => setName(e.target.value)}
                   maxLength={MAX_LEN}
                   required
-                  autoFocus
                 />
                 <p className="text-xs text-muted-foreground text-right">
                   {name.length}/{MAX_LEN}
                 </p>
               </div>
 
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading || !name.trim()}
+                disabled={loading || !name.trim() || !file}
               >
                 {loading ? "Wird gespeichert…" : "Los geht's"}
               </Button>

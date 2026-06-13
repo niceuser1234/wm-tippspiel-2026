@@ -37,7 +37,7 @@ export default async function AuthedLayout({
     .eq("id", user.id)
     .single();
 
-  if (!profile || profile.display_name === "") {
+  if (!profile || profile.display_name === "" || !profile.avatar_url) {
     redirect("/willkommen");
   }
 

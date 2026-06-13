@@ -1,5 +1,6 @@
 import type { LeaderboardRow } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/avatar";
 
 interface LeaderboardTableProps {
   rows: LeaderboardRow[];
@@ -87,9 +88,10 @@ export function LeaderboardTable({
                   {getMedalOrRank(row.rank)}
                 </td>
 
-                {/* Name + paid Indikator */}
+                {/* Name + Avatar + paid Indikator */}
                 <td>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar name={displayName} url={row.avatar_url} size={32} />
                     <span className="font-medium text-night">{displayName}</span>
                     {row.paid && (
                       <span title="Zahler" className="text-lg">💰</span>

@@ -12,12 +12,14 @@
 
 import { calcMatchPoints, POINTS_COLORS } from "@/lib/scoring";
 import { TeamLabel } from "@/components/team-label";
+import { Avatar } from "@/components/avatar";
 import type { Match } from "@/types/database";
 
 interface TipWithName {
   home_tip: number;
   away_tip: number;
   display_name: string;
+  avatar_url: string | null;
   user_id: string;
 }
 
@@ -138,7 +140,8 @@ export function MatchRevealCard({
                       : "bg-slate-50 border border-slate-100",
                   ].join(" ")}
                 >
-                  {/* Name */}
+                  {/* Avatar + Name */}
+                  <Avatar name={tip.display_name} url={tip.avatar_url} size={26} />
                   <span
                     className={[
                       "flex-1 truncate",

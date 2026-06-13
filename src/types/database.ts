@@ -21,6 +21,7 @@ export interface Profile {
   display_name: string;
   paid: boolean;
   is_admin: boolean;
+  avatar_url: string | null;
 }
 
 export interface Match {
@@ -69,6 +70,7 @@ export interface LeaderboardRow {
   special_points: number | null;
   total_points: number | null;
   exact_count: number | null;
+  avatar_url: string | null;
 }
 
 /** Supabase-Database-Typ für createClient<Database>. Inline-Typen sind Pflicht
@@ -82,18 +84,21 @@ export interface Database {
           display_name: string;
           paid: boolean;
           is_admin: boolean;
+          avatar_url: string | null;
         };
         Insert: {
           id: string;
           display_name?: string;
           paid?: boolean;
           is_admin?: boolean;
+          avatar_url?: string | null;
         };
         Update: {
           id?: string;
           display_name?: string;
           paid?: boolean;
           is_admin?: boolean;
+          avatar_url?: string | null;
         };
         Relationships: [];
       };
@@ -222,6 +227,7 @@ export interface Database {
           special_points: number | null;
           total_points: number | null;
           exact_count: number | null;
+          avatar_url: string | null;
         };
         // Required by GenericNonUpdatableView — without it Schema collapses to never
         Relationships: [];

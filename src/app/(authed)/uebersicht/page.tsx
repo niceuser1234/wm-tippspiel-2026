@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { MatchRevealCard } from "@/components/match-reveal-card";
 import { BetAnswer } from "@/components/team-label";
+import { Avatar } from "@/components/avatar";
 import type { Match, SpecialBet } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -15,14 +16,14 @@ interface MatchTipWithProfile {
   match_id: string;
   home_tip: number;
   away_tip: number;
-  profiles: { display_name: string } | null;
+  profiles: { display_name: string; avatar_url: string | null } | null;
 }
 
 interface SpecialBetTipWithProfile {
   user_id: string;
   special_bet_id: string;
   answer: string;
-  profiles: { display_name: string } | null;
+  profiles: { display_name: string; avatar_url: string | null } | null;
 }
 
 // ---- Hilfsfunktionen für Sonderwetten-Anzeige ----
@@ -65,7 +66,7 @@ export default async function UebersichtPage() {
   //    Wir laden einfach alles; die DB gibt vor Anpfiff nur die eigene Zeile zurück.
   const { data: allTipsRaw } = await supabase
     .from("match_tips")
-    .select("*, profiles(display_name)");
+    .select("*, profiles(display_name, avatar_url)");
 
   const allTips: MatchTipWithProfile[] = (allTipsRaw as MatchTipWithProfile[] | null) ?? [];
 
@@ -81,7 +82,7 @@ export default async function UebersichtPage() {
   //    RLS: nur nach lock_at sichtbar (oder eigene vorher).
   const { data: specialTipsRaw } = await supabase
     .from("special_bet_tips")
-    .select("*, profiles(display_name)");
+    .select("*, profiles(display_name, avatar_url)");
 
   const specialTips: SpecialBetTipWithProfile[] =
     (specialTipsRaw as SpecialBetTipWithProfile[] | null) ?? [];
@@ -104,6 +105,7 @@ export default async function UebersichtPage() {
         home_tip: t.home_tip,
         away_tip: t.away_tip,
         display_name: t.profiles?.display_name ?? "Unbekannt",
+        avatar_url: t.profiles?.avatar_url ?? null,
       }));
   }
 
@@ -328,6 +330,11 @@ export default async function UebersichtPage() {
                                       : "bg-slate-50 border border-slate-100",
                                   ].join(" ")}
                                 >
+                                  <Avatar
+                                    name={tip.profiles?.display_name ?? "?"}
+                                    url={tip.profiles?.avatar_url ?? null}
+                                    size={24}
+                                  />
                                   <span
                                     className={[
                                       "flex-1 truncate",
