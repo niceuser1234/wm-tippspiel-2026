@@ -11,7 +11,7 @@
  */
 
 import { calcMatchPoints, POINTS_COLORS } from "@/lib/scoring";
-import { teamLabel } from "@/lib/teams";
+import { TeamLabel } from "@/components/team-label";
 import type { Match } from "@/types/database";
 
 interface TipWithName {
@@ -56,15 +56,21 @@ export function MatchRevealCard({
       {/* Header: Teams + Zeit */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold text-night text-sm flex-1">
-            {teamLabel(match.home_team)}
-          </span>
+          <div className="flex-1 flex justify-start">
+            <TeamLabel
+              team={match.home_team}
+              className="font-semibold text-night text-sm"
+            />
+          </div>
           <span className="text-xs font-black italic text-muted-foreground px-2">
             vs
           </span>
-          <span className="font-semibold text-night text-sm flex-1 text-right">
-            {teamLabel(match.away_team)}
-          </span>
+          <div className="flex-1 flex justify-end">
+            <TeamLabel
+              team={match.away_team}
+              className="font-semibold text-night text-sm"
+            />
+          </div>
         </div>
 
         {/* Ergebnis oder Anstoßzeit */}
@@ -149,16 +155,11 @@ export function MatchRevealCard({
 
                   {/* Punkte-Badge */}
                   {pts !== null ? (
-                    <span
-                      className={[
-                        "ml-1 rounded-lg border px-2 py-0.5 text-xs font-bold tabular-nums",
-                        POINTS_COLORS[pts],
-                      ].join(" ")}
-                    >
+                    <span className={POINTS_COLORS[pts]}>
                       {pts > 0 ? `+${pts}` : "0"}
                     </span>
                   ) : (
-                    <span className="ml-1 rounded-lg border px-2 py-0.5 text-xs font-bold bg-slate-100 text-slate-400 border-slate-200">
+                    <span className="wm-pts wm-pts--live">
                       läuft…
                     </span>
                   )}

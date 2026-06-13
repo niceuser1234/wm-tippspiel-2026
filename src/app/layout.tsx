@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import "flag-icons/css/flag-icons.min.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,13 +15,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://wm-2026-tippspiel.vercel.app"),
   title: "WM 2026 Tippspiel",
   description:
-    "Privates Tippspiel zur FIFA Weltmeisterschaft 2026 — tippen, zittern, Topf gewinnen.",
+    "Tippspiel zur FIFA Weltmeisterschaft 2026 — tippen, zittern, Topf gewinnen. Haberstroh & Friends.",
   openGraph: {
-    title: "WM 2026 Tippspiel",
-    description: "Tippen. Zittern. Topf gewinnen.",
+    title: "WM 2026 Tippspiel ⚽",
+    description: "Tippen · Zittern · Topf gewinnen — Haberstroh & Friends",
     type: "website",
+    locale: "de_DE",
+    siteName: "WM 2026 Tippspiel",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WM 2026 Tippspiel ⚽",
+    description: "Tippen · Zittern · Topf gewinnen — Haberstroh & Friends",
   },
 };
 

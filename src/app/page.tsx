@@ -41,17 +41,33 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-8">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
+      {/* Hintergrund-Video — nur auf der Login-Page. z-0 (nicht negativ),
+          sonst verdeckt der body-Hintergrund das Video. */}
+      <video
+        className="fixed left-0 top-0 z-0 h-[100dvh] w-[100vw] object-cover"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden="true"
+      >
+        <source src="/flags-loop.mp4" type="video/mp4" />
+      </video>
+
+      {/* Abdunkelndes Milchglas-Overlay: über Video, unter Login-Box */}
+      <div className="fixed left-0 top-0 z-0 h-[100dvh] w-[100vw] bg-black/30 backdrop-blur-[3px]" />
+
+      <div className="relative z-10 w-full max-w-sm space-y-8">
         {/* Hero */}
         <div className="text-center space-y-2">
-          <h1 className="display-heading text-4xl text-primary">
-            ⚽ WM 2026
+          <h1 className="display-heading text-5xl display-gradient">
+            WM 2026
           </h1>
-          <h2 className="display-heading text-2xl text-night">
-            Tippspiel
+          <h2 className="display-heading text-2xl text-white drop-shadow-sm">
+            ⚽ Tippspiel
           </h2>
-          <p className="text-muted-foreground text-base mt-3">
+          <p className="text-white/85 text-base mt-3 drop-shadow-sm">
             Tippen. Zittern. Topf gewinnen.
           </p>
         </div>
@@ -114,8 +130,8 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground">
-          Privates Tippspiel · ~20 Teilnehmer · kein echtes Wetten
+        <p className="text-center text-xs text-white/75 drop-shadow-sm">
+          Tippspiel Haberstroh &amp; Friends
         </p>
       </div>
     </div>

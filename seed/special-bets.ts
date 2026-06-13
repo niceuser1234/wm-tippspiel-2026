@@ -1,9 +1,12 @@
 // =============================================================================
-// seed/special-bets.ts — 7 Sonderwetten WM 2026
+// seed/special-bets.ts — Sonderwetten WM 2026
 //
-// Exakt nach README-Tabelle + DECISIONS §6.
-// Alle lock_at = '2026-06-11T16:00:00Z' (vor dem Eröffnungsspiel).
-// options-jsonb: Teamlisten, Spielerlisten, Runden-Listen gemäß DECISIONS §6.
+// Aufbau nach README-Tabelle + DECISIONS §6, mit Anpassungen:
+//   - "Deutschland – Aus in welcher Runde?" entfernt
+//   - Gruppensieger-Wette für JEDE Gruppe A–L (je 3 Pkt)
+//   - "Mannschaft mit größtem Skandal des Turniers" (8 Pkt, manuell aufgelöst)
+// Alle lock_at = '2026-06-14T17:00:00Z' (Anpfiff Deutschland–Curaçao).
+// options-jsonb: Teamlisten, Spielerlisten gemäß DECISIONS §6.
 // =============================================================================
 
 export interface SpecialBetSeed {
@@ -14,39 +17,25 @@ export interface SpecialBetSeed {
   lock_at: string; // ISO 8601 UTC
 }
 
-// Alle 48 qualifizierten Teams (für Wette #1, #4, #6) —
-// verifiziert am 09.06.2026 gegen die offiziellen Gruppen A–L (fifa.com, sportschau.de)
-const ALL_TEAMS: string[] = [
-  // Gruppe A
-  'Mexiko', 'Südafrika', 'Südkorea', 'Tschechien',
-  // Gruppe B
-  'Kanada', 'Bosnien-Herzegowina', 'Katar', 'Schweiz',
-  // Gruppe C
-  'Brasilien', 'Marokko', 'Haiti', 'Schottland',
-  // Gruppe D
-  'USA', 'Paraguay', 'Australien', 'Türkei',
-  // Gruppe E
-  'Deutschland', 'Curaçao', 'Elfenbeinküste', 'Ecuador',
-  // Gruppe F
-  'Niederlande', 'Japan', 'Schweden', 'Tunesien',
-  // Gruppe G
-  'Belgien', 'Ägypten', 'Iran', 'Neuseeland',
-  // Gruppe H
-  'Spanien', 'Uruguay', 'Saudi-Arabien', 'Kap Verde',
-  // Gruppe I
-  'Frankreich', 'Senegal', 'Norwegen', 'Irak',
-  // Gruppe J
-  'Argentinien', 'Algerien', 'Österreich', 'Jordanien',
-  // Gruppe K
-  'Portugal', 'DR Kongo', 'Usbekistan', 'Kolumbien',
-  // Gruppe L
-  'England', 'Kroatien', 'Ghana', 'Panama',
-];
+// Alle 48 Teams nach Gruppen A–L —
+// verifiziert am 09.06.2026 gegen die offiziellen Gruppen (fifa.com, sportschau.de)
+const GROUPS: Record<string, string[]> = {
+  A: ['Mexiko', 'Südafrika', 'Südkorea', 'Tschechien'],
+  B: ['Kanada', 'Bosnien-Herzegowina', 'Katar', 'Schweiz'],
+  C: ['Brasilien', 'Marokko', 'Haiti', 'Schottland'],
+  D: ['USA', 'Paraguay', 'Australien', 'Türkei'],
+  E: ['Deutschland', 'Curaçao', 'Elfenbeinküste', 'Ecuador'],
+  F: ['Niederlande', 'Japan', 'Schweden', 'Tunesien'],
+  G: ['Belgien', 'Ägypten', 'Iran', 'Neuseeland'],
+  H: ['Spanien', 'Uruguay', 'Saudi-Arabien', 'Kap Verde'],
+  I: ['Frankreich', 'Senegal', 'Norwegen', 'Irak'],
+  J: ['Argentinien', 'Algerien', 'Österreich', 'Jordanien'],
+  K: ['Portugal', 'DR Kongo', 'Usbekistan', 'Kolumbien'],
+  L: ['England', 'Kroatien', 'Ghana', 'Panama'],
+};
 
-// Gruppe-E-Teams (für Wette #7)
-const GROUP_E_TEAMS: string[] = [
-  'Deutschland', 'Elfenbeinküste', 'Ecuador', 'Curaçao',
-];
+// Alle 48 qualifizierten Teams (für Wette #1, #4, #6, Skandal-Wette)
+const ALL_TEAMS: string[] = Object.values(GROUPS).flat();
 
 // ~24 Torjäger-Kandidaten (für Wette #2, Torschützenkönig)
 const TOP_SCORER_CANDIDATES: string[] = [
@@ -76,18 +65,19 @@ const TOP_SCORER_CANDIDATES: string[] = [
   'Christian Pulisic',
 ];
 
-// Runden-Optionen für Wette #5 (inkl. Sechzehntelfinale, G4)
-const ROUND_OPTIONS: string[] = [
-  'Gruppenphase',
-  'Sechzehntelfinale',
-  'Achtelfinale',
-  'Viertelfinale',
-  'Halbfinale',
-  'Finale (verloren)',
-  'Weltmeister',
-];
+// 14.06.2026 19:00 MESZ = 17:00 UTC (= Anpfiff Deutschland–Curaçao)
+const LOCK_AT = '2026-06-14T17:00:00Z';
 
-const LOCK_AT = '2026-06-11T16:00:00Z';
+// Gruppensieger-Wette pro Gruppe A–L (je 3 Pkt)
+const GROUP_WINNER_BETS: SpecialBetSeed[] = Object.entries(GROUPS).map(
+  ([letter, teams]) => ({
+    title: `Gruppensieger Gruppe ${letter}`,
+    bet_type: 'team',
+    options: teams,
+    points_value: 3,
+    lock_at: LOCK_AT,
+  })
+);
 
 export const specialBets: SpecialBetSeed[] = [
   {
@@ -123,14 +113,6 @@ export const specialBets: SpecialBetSeed[] = [
     lock_at: LOCK_AT,
   },
   {
-    // Wette #5 — Deutschland: Aus in welcher Runde?
-    title: 'Deutschland – Aus in welcher Runde?',
-    bet_type: 'round',
-    options: ROUND_OPTIONS,
-    points_value: 6,
-    lock_at: LOCK_AT,
-  },
-  {
     // Wette #6 — Welches Team kassiert die meisten Roten Karten?
     title: 'Welches Team kassiert die meisten Roten Karten?',
     bet_type: 'team',
@@ -139,11 +121,13 @@ export const specialBets: SpecialBetSeed[] = [
     lock_at: LOCK_AT,
   },
   {
-    // Wette #7 — Gruppensieger Gruppe E
-    title: 'Gruppensieger Gruppe E',
+    // Mannschaft mit größtem Skandal — wird am Ende manuell aufgelöst
+    title: 'Mannschaft mit größtem Skandal des Turniers',
     bet_type: 'team',
-    options: GROUP_E_TEAMS,
-    points_value: 5,
+    options: ALL_TEAMS,
+    points_value: 8,
     lock_at: LOCK_AT,
   },
+  // Gruppensieger-Wetten für alle 12 Gruppen A–L (je 3 Pkt)
+  ...GROUP_WINNER_BETS,
 ];

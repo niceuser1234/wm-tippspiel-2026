@@ -54,26 +54,15 @@ export function LeaderboardTable({
 
   return (
     <div className="overflow-x-auto -mx-4">
-      <table className="w-full text-sm">
+      <table className="wm-table">
         {/* Header */}
         <thead>
-          <tr className="border-b-2 border-border">
-            <th className="px-4 py-3 text-left font-semibold text-night">
-              Platz
-            </th>
-            <th className="px-4 py-3 text-left font-semibold text-night">
-              Name
-            </th>
-            {/* Mobile: Spieltipps + Sonderwetten zusammengefasst in "Punkte" */}
-            <th className="px-4 py-3 text-right font-semibold text-night hidden sm:table-cell">
-              Spieltipps
-            </th>
-            <th className="px-4 py-3 text-right font-semibold text-night hidden sm:table-cell">
-              Sonderwetten
-            </th>
-            <th className="px-4 py-3 text-right font-semibold text-night">
-              Gesamt
-            </th>
+          <tr>
+            <th>Platz</th>
+            <th>Name</th>
+            <th className="text-right hidden sm:table-cell">Spieltipps</th>
+            <th className="text-right hidden sm:table-cell">Sonderwetten</th>
+            <th className="text-right">Gesamt</th>
           </tr>
         </thead>
 
@@ -90,45 +79,37 @@ export function LeaderboardTable({
               <tr
                 key={row.id}
                 className={cn(
-                  "border-b border-border transition-colors",
-                  isCurrentUser
-                    ? "bg-amber-50 ring-1 ring-amber-400/40"
-                    : "hover:bg-secondary/50"
+                  isCurrentUser ? "is-me" : "hover:bg-secondary/50"
                 )}
               >
                 {/* Platz */}
-                <td className="px-4 py-3 text-center font-bold text-lg text-night">
+                <td className="wm-table__rank">
                   {getMedalOrRank(row.rank)}
                 </td>
 
                 {/* Name + paid Indikator */}
-                <td className="px-4 py-3 text-left">
+                <td>
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-night">{displayName}</span>
                     {row.paid && (
-                      <span title="Zahler" className="text-lg">
-                        💰
-                      </span>
+                      <span title="Zahler" className="text-lg">💰</span>
                     )}
                   </div>
                 </td>
 
                 {/* Spieltipps (hidden auf mobile) */}
-                <td className="px-4 py-3 text-right font-medium score-nums text-night hidden sm:table-cell">
+                <td className="text-right font-medium score-nums text-night hidden sm:table-cell">
                   {matchPts}
                 </td>
 
                 {/* Sonderwetten (hidden auf mobile) */}
-                <td className="px-4 py-3 text-right font-medium score-nums text-night hidden sm:table-cell">
+                <td className="text-right font-medium score-nums text-night hidden sm:table-cell">
                   {specialPts}
                 </td>
 
-                {/* Gesamt — prominent, gold-Farbe */}
-                <td className="px-4 py-3 text-right">
-                  <span className="font-black italic score-nums text-lg text-gold">
-                    {totalPts}
-                  </span>
-                  {/* Mobile: Spieltipps + Sonderwetten in Klammern anzeigen */}
+                {/* Gesamt — prominent, gold */}
+                <td className="text-right">
+                  <span className="wm-table__total">{totalPts}</span>
                   {matchPts > 0 || specialPts > 0 ? (
                     <div className="text-xs text-muted-foreground mt-1 sm:hidden">
                       {matchPts} + {specialPts}

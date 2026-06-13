@@ -68,12 +68,49 @@ export const TEAM_FLAGS: Record<string, string> = {
 
 export const ALL_TEAMS = Object.keys(TEAM_FLAGS);
 
-/** Flagge für ein Team, Fallback ⚽ für unbekannte Namen (z.B. K.o.-Platzhalter). */
+/**
+ * flag-icons-Codes (ISO 3166-1 alpha-2, plus GB-Subdivisionen für
+ * England/Schottland). Quelle für die SVG-Flaggen — rendern auf JEDEM Gerät
+ * identisch (Emoji-Flaggen fehlen z.B. komplett auf Windows).
+ */
+export const TEAM_ISO: Record<string, string> = {
+  // Gruppe A
+  Mexiko: "mx", Südafrika: "za", Südkorea: "kr", Tschechien: "cz",
+  // Gruppe B
+  Kanada: "ca", "Bosnien-Herzegowina": "ba", Katar: "qa", Schweiz: "ch",
+  // Gruppe C
+  Brasilien: "br", Marokko: "ma", Haiti: "ht", Schottland: "gb-sct",
+  // Gruppe D
+  USA: "us", Paraguay: "py", Australien: "au", Türkei: "tr",
+  // Gruppe E
+  Deutschland: "de", Curaçao: "cw", Elfenbeinküste: "ci", Ecuador: "ec",
+  // Gruppe F
+  Niederlande: "nl", Japan: "jp", Schweden: "se", Tunesien: "tn",
+  // Gruppe G
+  Belgien: "be", Ägypten: "eg", Iran: "ir", Neuseeland: "nz",
+  // Gruppe H
+  Spanien: "es", Uruguay: "uy", "Saudi-Arabien": "sa", "Kap Verde": "cv",
+  // Gruppe I
+  Frankreich: "fr", Senegal: "sn", Norwegen: "no", Irak: "iq",
+  // Gruppe J
+  Argentinien: "ar", Algerien: "dz", Österreich: "at", Jordanien: "jo",
+  // Gruppe K
+  Portugal: "pt", "DR Kongo": "cd", Usbekistan: "uz", Kolumbien: "co",
+  // Gruppe L
+  England: "gb-eng", Kroatien: "hr", Ghana: "gh", Panama: "pa",
+};
+
+/** flag-icons-Code für ein Team, oder null für unbekannte Namen. */
+export function isoFor(team: string): string | null {
+  return TEAM_ISO[team] ?? null;
+}
+
+/** Flagge-Emoji für ein Team, Fallback ⚽ (für Text-Kontexte ohne JSX). */
 export function flagFor(team: string): string {
   return TEAM_FLAGS[team] ?? "⚽";
 }
 
-/** "🇩🇪 Deutschland" — Standard-Darstellung überall im UI. */
+/** "🇩🇪 Deutschland" — Emoji-Variante (Fallback/Text). UI nutzt <TeamLabel>. */
 export function teamLabel(team: string): string {
   return `${flagFor(team)} ${team}`;
 }

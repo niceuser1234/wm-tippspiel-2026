@@ -29,10 +29,10 @@ export function calcMatchPoints(
   return 0;
 }
 
-/** Tailwind-Klassen für Punkte-Badges (Text-Farbe + Hintergrund). */
+/** CSS-Klassen für Punkte-Badges — wm-pts-System aus globals.css. */
 export const POINTS_COLORS: Record<0 | 2 | 3 | 4, string> = {
-  4: "bg-amber-100 text-amber-700 border-amber-300",   // Gold — exakt
-  3: "bg-green-100 text-green-700 border-green-300",   // Grün — Tordifferenz
-  2: "bg-emerald-50 text-emerald-600 border-emerald-200", // Heller grün — Tendenz
-  0: "bg-slate-100 text-slate-400 border-slate-200",   // Grau — daneben
+  4: "wm-pts wm-pts--4 badge-exact",
+  3: "wm-pts wm-pts--3 anim-pop",
+  2: "wm-pts wm-pts--2 anim-pop",
+  0: "wm-pts wm-pts--0",
 };

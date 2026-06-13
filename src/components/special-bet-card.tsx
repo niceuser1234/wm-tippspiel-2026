@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import { BetAnswer } from "@/components/team-label";
 import type { SpecialBet } from "@/types/database";
 
 const FREE_TEXT_SENTINEL = "__freitext__";
@@ -76,6 +77,13 @@ export function SpecialBetCard({ bet, existingAnswer }: Props) {
   );
   const [saving, setSaving] = useState(false);
 
+  // Gespeicherte Antwort + Bearbeitungsmodus steuern die Ansicht.
+  const [savedAnswer, setSavedAnswer] = useState<string | null>(existingAnswer);
+  const [editing, setEditing] = useState(false);
+
+  // Form anzeigen, wenn noch nichts gespeichert ODER der User aktiv bearbeitet.
+  const showForm = savedAnswer === null || editing;
+
   function buildAnswer(): string | null {
     switch (bet.bet_type) {
       case "team":
@@ -134,9 +142,13 @@ export function SpecialBetCard({ bet, existingAnswer }: Props) {
       } else {
         toast.error("❌ Fehler beim Speichern");
       }
-    } else {
-      toast.success("✅ Tipp gespeichert");
+      return;
     }
+
+    // Erfolg → Gespeichert-Ansicht zeigen
+    setSavedAnswer(answer);
+    setEditing(false);
+    toast.success("✅ Tipp gespeichert");
   }
 
   return (
@@ -156,108 +168,150 @@ export function SpecialBetCard({ bet, existingAnswer }: Props) {
           {formatDeadline(bet.lock_at)}
         </p>
 
-        {(bet.bet_type === "team" || bet.bet_type === "round") && (
-          <Select value={selectValue} onValueChange={setSelectValue}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Auswählen…" />
-            </SelectTrigger>
-            <SelectContent>
-              {(bet.options ?? []).map((opt) => (
-                <SelectItem key={opt} value={opt}>
-                  {opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        {bet.bet_type === "number" && (
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs">Deine Schätzung</Label>
-            <Input
-              type="number"
-              min={0}
-              max={999}
-              value={numberValue}
-              onChange={(e) => setNumberValue(e.target.value)}
-              placeholder="z.B. 142"
-              className="w-full"
-            />
+        {!showForm ? (
+          // -------- Gespeichert-Ansicht --------
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2.5 rounded-xl bg-green-50 border border-green-200 px-3 py-2.5">
+              <span className="text-base leading-none">✅</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-green-600">
+                  Dein Tipp gespeichert
+                </p>
+                <p className="text-sm font-bold text-night truncate">
+                  <BetAnswer betType={bet.bet_type} answer={savedAnswer!} />
+                </p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditing(true)}
+              className="w-full border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              Wette ändern
+            </Button>
           </div>
-        )}
-
-        {bet.bet_type === "text" && (
-          <div className="flex flex-col gap-2">
-            <Select value={selectValue} onValueChange={setSelectValue}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Auswählen…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(bet.options ?? []).map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {opt}
-                  </SelectItem>
-                ))}
-                <SelectItem value={FREE_TEXT_SENTINEL}>
-                  Anderer Spieler…
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {selectValue === FREE_TEXT_SENTINEL && (
-              <Input
-                type="text"
-                value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-                placeholder="Spielername eingeben"
-              />
+        ) : (
+          // -------- Eingabe-Formular --------
+          <>
+            {(bet.bet_type === "team" || bet.bet_type === "round") && (
+              <Select value={selectValue} onValueChange={setSelectValue}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Auswählen…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(bet.options ?? []).map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
-          </div>
-        )}
 
-        {bet.bet_type === "two_teams" && (
-          <div className="flex flex-col gap-2">
-            <Label className="text-xs">Team 1</Label>
-            <Select
-              value={twoTeams[0]}
-              onValueChange={(v) => setTwoTeams([v, twoTeams[1]])}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Auswählen…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(bet.options ?? []).map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Label className="text-xs">Team 2</Label>
-            <Select
-              value={twoTeams[1]}
-              onValueChange={(v) => setTwoTeams([twoTeams[0], v])}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Auswählen…" />
-              </SelectTrigger>
-              <SelectContent>
-                {(bet.options ?? []).map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {opt}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+            {bet.bet_type === "number" && (
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs">Deine Schätzung</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={999}
+                  value={numberValue}
+                  onChange={(e) => setNumberValue(e.target.value)}
+                  placeholder="z.B. 142"
+                  className="w-full"
+                />
+              </div>
+            )}
 
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-[#15803d] hover:bg-[#166534] text-white"
-        >
-          {saving ? "Speichern…" : "Tipp speichern"}
-        </Button>
+            {bet.bet_type === "text" && (
+              <div className="flex flex-col gap-2">
+                <Select value={selectValue} onValueChange={setSelectValue}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Auswählen…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(bet.options ?? []).map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                    <SelectItem value={FREE_TEXT_SENTINEL}>
+                      Anderer Spieler…
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                {selectValue === FREE_TEXT_SENTINEL && (
+                  <Input
+                    type="text"
+                    value={freeText}
+                    onChange={(e) => setFreeText(e.target.value)}
+                    placeholder="Spielername eingeben"
+                  />
+                )}
+              </div>
+            )}
+
+            {bet.bet_type === "two_teams" && (
+              <div className="flex flex-col gap-2">
+                <Label className="text-xs">Team 1</Label>
+                <Select
+                  value={twoTeams[0]}
+                  onValueChange={(v) => setTwoTeams([v, twoTeams[1]])}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Auswählen…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(bet.options ?? []).map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Label className="text-xs">Team 2</Label>
+                <Select
+                  value={twoTeams[1]}
+                  onValueChange={(v) => setTwoTeams([twoTeams[0], v])}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Auswählen…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(bet.options ?? []).map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full bg-[#15803d] hover:bg-[#166534] text-white"
+            >
+              {saving
+                ? "Speichern…"
+                : savedAnswer
+                ? "Änderung speichern"
+                : "Tipp speichern"}
+            </Button>
+
+            {savedAnswer && !saving && (
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="text-xs text-muted-foreground underline underline-offset-4 mx-auto"
+              >
+                Abbrechen
+              </button>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );

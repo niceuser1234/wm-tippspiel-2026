@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { MatchRevealCard } from "@/components/match-reveal-card";
-import { teamLabel } from "@/lib/teams";
+import { BetAnswer } from "@/components/team-label";
 import type { Match, SpecialBet } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -26,19 +26,6 @@ interface SpecialBetTipWithProfile {
 }
 
 // ---- Hilfsfunktionen für Sonderwetten-Anzeige ----
-
-function formatAnswer(bet: SpecialBet, answer: string): string {
-  if (bet.bet_type === "two_teams") {
-    try {
-      const teams: string[] = JSON.parse(answer);
-      return teams.map(teamLabel).join(" & ");
-    } catch {
-      return answer;
-    }
-  }
-  if (bet.bet_type === "team") return teamLabel(answer);
-  return answer;
-}
 
 
 function findClosestNumber(
@@ -134,7 +121,7 @@ export default async function UebersichtPage() {
     upcoming.length === matches.length;
 
   return (
-    <div className="px-4 py-6 max-w-xl mx-auto">
+    <div className="px-4 py-6 max-w-6xl mx-auto">
       <h1 className="display-heading text-2xl text-night mb-6">📋 Übersicht</h1>
 
       {allScoresNull && (
@@ -155,7 +142,7 @@ export default async function UebersichtPage() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
             Laufend / Abgeschlossen
           </h2>
-          <div className="space-y-3">
+          <div className="grid gap-3 items-start grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]">
             {started.map((match) => (
               <MatchRevealCard
                 key={match.id}
@@ -175,7 +162,7 @@ export default async function UebersichtPage() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
             Kommende Spiele
           </h2>
-          <div className="space-y-3">
+          <div className="grid gap-3 items-start grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]">
             {upcoming.map((match) => (
               <MatchRevealCard
                 key={match.id}
@@ -201,7 +188,7 @@ export default async function UebersichtPage() {
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
             Sonderwetten
           </h2>
-          <div className="space-y-4">
+          <div className="grid gap-4 items-start grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]">
             {specialBets.map((bet) => {
               const lockTime = new Date(bet.lock_at);
               const isLocked = lockTime <= now;
@@ -256,7 +243,7 @@ export default async function UebersichtPage() {
                           <div className="mt-2 flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
                             <span className="text-sm">🔒</span>
                             <span className="text-sm font-bold text-night flex-1 truncate">
-                              {formatAnswer(bet, ownSpecialTip.answer)}
+                              <BetAnswer betType={bet.bet_type} answer={ownSpecialTip.answer} />
                             </span>
                             <span className="text-xs text-muted-foreground">
                               dein Tipp
@@ -279,7 +266,7 @@ export default async function UebersichtPage() {
                           <div className="mt-2 mb-3 flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2">
                             <span className="text-sm">✅</span>
                             <span className="text-sm font-bold text-green-700 flex-1 truncate">
-                              {formatAnswer(bet, bet.correct_answer)}
+                              <BetAnswer betType={bet.bet_type} answer={bet.correct_answer} />
                             </span>
                             <span className="text-xs text-green-600">
                               Lösung
@@ -359,7 +346,7 @@ export default async function UebersichtPage() {
                                         : "text-night",
                                     ].join(" ")}
                                   >
-                                    {formatAnswer(bet, tip.answer)}
+                                    <BetAnswer betType={bet.bet_type} answer={tip.answer} />
                                   </span>
                                   {correct && (
                                     <span className="text-green-600 text-xs font-bold">
