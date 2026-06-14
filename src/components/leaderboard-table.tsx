@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { LeaderboardRow } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/avatar";
@@ -72,13 +73,24 @@ export function LeaderboardTable({
 
                 {/* Name + Avatar + paid Indikator */}
                 <td>
-                  <div className="flex items-center gap-2.5">
-                    <Avatar name={displayName} url={row.avatar_url} size={32} />
-                    <span className="font-medium text-night">{displayName}</span>
-                    {row.paid && (
-                      <span title="Zahler" className="text-lg">💰</span>
-                    )}
-                  </div>
+                  {row.id ? (
+                    <Link
+                      href={`/spieler/${row.id}`}
+                      className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar name={displayName} url={row.avatar_url} size={32} />
+                      <span className="font-medium text-night underline-offset-2 hover:underline">
+                        {displayName}
+                      </span>
+                      {row.paid && <span title="Zahler" className="text-lg">💰</span>}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2.5">
+                      <Avatar name={displayName} url={row.avatar_url} size={32} />
+                      <span className="font-medium text-night">{displayName}</span>
+                      {row.paid && <span title="Zahler" className="text-lg">💰</span>}
+                    </div>
+                  )}
                 </td>
 
                 {/* Spieltipps (hidden auf mobile) */}
