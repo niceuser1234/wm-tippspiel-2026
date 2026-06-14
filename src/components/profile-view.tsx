@@ -4,7 +4,7 @@ import { withRanks } from "@/lib/rank";
 import { pointsForTip } from "@/lib/scoring";
 import { ProfileHeader } from "@/components/profile-header";
 import { ProfileTipList, type ProfileTipItem } from "@/components/profile-tip-list";
-import type { Match, TipReaction } from "@/types/database";
+import type { Match, TipReaction, TipComment } from "@/types/database";
 
 interface ReactionRaw {
   id: string;
@@ -13,6 +13,15 @@ interface ReactionRaw {
   emoji: string;
   created_at: string;
   profiles: { display_name: string } | null;
+}
+
+interface CommentRaw {
+  id: string;
+  match_tip_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+  profiles: { display_name: string; avatar_url: string | null } | null;
 }
 
 interface TipRow {
@@ -112,6 +121,21 @@ export async function ProfileView({ targetId, viewerId }: ProfileViewProps) {
     }));
   }
 
+  // Kommentare für die sichtbaren Tipps des Ziel-Users
+  let comments: (TipComment & { display_name: string; avatar_url: string | null })[] = [];
+  if (targetTipIds.length) {
+    const { data } = await supabase
+      .from("tip_comments")
+      .select("*, profiles(display_name, avatar_url)")
+      .in("match_tip_id", targetTipIds)
+      .order("created_at", { ascending: true });
+    comments = ((data as CommentRaw[] | null) ?? []).map((c) => ({
+      id: c.id, match_tip_id: c.match_tip_id, author_id: c.author_id, body: c.body, created_at: c.created_at,
+      display_name: c.profiles?.display_name ?? "Unbekannt",
+      avatar_url: c.profiles?.avatar_url ?? null,
+    }));
+  }
+
   return (
     <div className="px-4 py-6 max-w-lg mx-auto space-y-5">
       <ProfileHeader
@@ -125,7 +149,7 @@ export async function ProfileView({ targetId, viewerId }: ProfileViewProps) {
         exactCount={me?.exact_count ?? 0}
         hitRatePct={hitRatePct}
       />
-      <ProfileTipList items={items} viewerId={viewerId} reactions={reactions} comments={[]} />
+      <ProfileTipList items={items} viewerId={viewerId} reactions={reactions} comments={comments} />
     </div>
   );
 }

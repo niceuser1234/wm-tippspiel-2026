@@ -1,6 +1,7 @@
 import { TeamLabel } from "@/components/team-label";
 import { POINTS_COLORS, type MatchPoints } from "@/lib/scoring";
 import { TipReactions } from "@/components/tip-reactions";
+import { TipComments } from "@/components/tip-comments";
 import type { TipReaction, TipComment } from "@/types/database";
 
 export interface ProfileTipItem {
@@ -23,7 +24,7 @@ interface ProfileTipListProps {
   comments: (TipComment & { display_name: string; avatar_url: string | null })[];
 }
 
-export function ProfileTipList({ items, viewerId, reactions }: ProfileTipListProps) {
+export function ProfileTipList({ items, viewerId, reactions, comments }: ProfileTipListProps) {
   if (items.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-6 text-center">
@@ -58,6 +59,18 @@ export function ProfileTipList({ items, viewerId, reactions }: ProfileTipListPro
               initial={reactions
                 .filter((r) => r.match_tip_id === it.matchTipId)
                 .map((r) => ({ emoji: r.emoji, user_id: r.user_id, display_name: r.display_name }))}
+            />
+          )}
+          {it.hasStarted && (
+            <TipComments
+              matchTipId={it.matchTipId}
+              viewerId={viewerId}
+              initial={comments
+                .filter((c) => c.match_tip_id === it.matchTipId)
+                .map((c) => ({
+                  id: c.id, author_id: c.author_id, body: c.body, created_at: c.created_at,
+                  display_name: c.display_name, avatar_url: c.avatar_url,
+                }))}
             />
           )}
         </div>
