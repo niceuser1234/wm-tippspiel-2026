@@ -67,6 +67,8 @@ const TOP_SCORER_CANDIDATES: string[] = [
 
 // 14.06.2026 19:00 MESZ = 17:00 UTC (= Anpfiff Deutschland–Curaçao)
 const LOCK_AT = '2026-06-14T17:00:00Z';
+// Gruppensieger länger offen: 15.06.2026 19:00 MESZ = 17:00 UTC
+const GROUP_LOCK_AT = '2026-06-15T17:00:00Z';
 
 // Gruppensieger-Wette pro Gruppe A–L (je 3 Pkt)
 const GROUP_WINNER_BETS: SpecialBetSeed[] = Object.entries(GROUPS).map(
@@ -75,7 +77,7 @@ const GROUP_WINNER_BETS: SpecialBetSeed[] = Object.entries(GROUPS).map(
     bet_type: 'team',
     options: teams,
     points_value: 3,
-    lock_at: LOCK_AT,
+    lock_at: GROUP_LOCK_AT,
   })
 );
 
