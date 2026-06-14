@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 // Routen, die eingeloggte User erfordern
-const PROTECTED_PATHS = ["/tippen", "/uebersicht", "/rangliste", "/willkommen"];
+const PROTECTED_PATHS = ["/tippen", "/uebersicht", "/rangliste", "/regeln", "/willkommen"];
 
 export async function middleware(request: NextRequest) {
   const { response, user } = await updateSession(request);

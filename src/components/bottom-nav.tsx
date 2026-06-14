@@ -8,6 +8,7 @@ const TABS = [
   { href: "/tippen", label: "Tippen", emoji: "⚽" },
   { href: "/uebersicht", label: "Übersicht", emoji: "📋" },
   { href: "/rangliste", label: "Rangliste", emoji: "🏆" },
+  { href: "/regeln", label: "Regeln", emoji: "📖" },
 ] as const;
 
 export function BottomNav() {

@@ -10,7 +10,7 @@
  * umgeht, liefert die DB vor Anpfiff nur die eigene Zeile zurück.
  */
 
-import { calcMatchPoints, POINTS_COLORS } from "@/lib/scoring";
+import { calcMatchPoints, POINTS_COLORS, tipDistance, isExactTip } from "@/lib/scoring";
 import { TeamLabel } from "@/components/team-label";
 import { Avatar } from "@/components/avatar";
 import type { Match } from "@/types/database";
@@ -119,16 +119,28 @@ export function MatchRevealCard({
         )}
 
         {/* NACH ANPFIFF — Tips-Grid */}
-        {hasStarted && tips && tips.length > 0 && (
+        {hasStarted && tips && tips.length > 0 && (() => {
+          // "Am nächsten dran": kleinste Tor-Distanz unter den nicht-exakten Tipps
+          const result = hasResult
+            ? { home_score: match.home_score!, away_score: match.away_score! }
+            : null;
+          let minDist = Infinity;
+          if (result) {
+            for (const t of tips) {
+              if (!isExactTip(t, result)) {
+                minDist = Math.min(minDist, tipDistance(t, result));
+              }
+            }
+          }
+          return (
           <div className="mt-3 space-y-1.5">
             {tips.map((tip) => {
               const isOwn = tip.user_id === currentUserId;
-              const pts = hasResult
-                ? calcMatchPoints(tip, {
-                    home_score: match.home_score!,
-                    away_score: match.away_score!,
-                  })
-                : null;
+              const isClosest =
+                result !== null &&
+                !isExactTip(tip, result) &&
+                tipDistance(tip, result) === minDist;
+              const pts = result ? calcMatchPoints(tip, result, isClosest) : null;
 
               return (
                 <div
@@ -170,7 +182,8 @@ export function MatchRevealCard({
               );
             })}
           </div>
-        )}
+          );
+        })()}
 
         {/* NACH ANPFIFF — keine Tipps vorhanden */}
         {hasStarted && (!tips || tips.length === 0) && (
