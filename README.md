@@ -13,7 +13,7 @@ A private prediction game for friends and family during the FIFA World Cup 2026 
 - **Special Bets** — 7 tournament-wide predictions (winner, top scorer, total goals, finalists, etc.)
 - **Hidden Tips** — RLS-enforced: other players' tips stay hidden until kickoff
 - **Live Leaderboard** — calculated live from a SQL view, no stored scores
-- **Reveal View** — post-kickoff overview with point badges (+4/+3/+2/0) per tip
+- **Reveal View** — post-kickoff overview with point badges (+6/+3/0) per tip
 - **Mobile-first** — designed for checking the leaderboard on your phone mid-game
 
 ## Tech Stack
