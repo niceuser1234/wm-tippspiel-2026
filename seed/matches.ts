@@ -48,12 +48,6 @@ export const matches: MatchSeed[] = [
   },
   {
     stage: 'group',
-    home_team: 'Brasilien',
-    away_team: 'Marokko',
-    kickoff_at: '2026-06-14T23:00:00Z', // TODO verify kickoff — 14.6. bestätigt, Uhrzeit geschätzt (Gruppe C)
-  },
-  {
-    stage: 'group',
     home_team: 'Frankreich',
     away_team: 'Senegal',
     kickoff_at: '2026-06-16T19:00:00Z', // 16.6. 21:00 MESZ (Gruppe I)
