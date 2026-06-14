@@ -8,13 +8,16 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = (searchParams.get("type") ?? "magiclink") as EmailOtpType;
   const code = searchParams.get("code");
+  // Wohin nach erfolgreicher Verifikation? (z.B. /passwort-neu beim Reset)
+  const nextParam = searchParams.get("next");
+  const next = nextParam && nextParam.startsWith("/") ? nextParam : "/tippen";
 
   // Alle URL-Parameter für Debugging erfassen
   const allParams = Object.fromEntries(searchParams.entries());
 
   // PKCE-Flow: exchangeCodeForSession wenn 'code' vorhanden
   if (code) {
-    const response = NextResponse.redirect(new URL("/tippen", origin));
+    const response = NextResponse.redirect(new URL(next, origin));
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   // OTP-Flow: verifyOtp mit token_hash
   if (token_hash) {
-    const response = NextResponse.redirect(new URL("/tippen", origin));
+    const response = NextResponse.redirect(new URL(next, origin));
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
