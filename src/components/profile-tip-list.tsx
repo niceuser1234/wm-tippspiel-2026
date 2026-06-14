@@ -1,5 +1,6 @@
 import { TeamLabel } from "@/components/team-label";
 import { POINTS_COLORS, type MatchPoints } from "@/lib/scoring";
+import { TipReactions } from "@/components/tip-reactions";
 import type { TipReaction, TipComment } from "@/types/database";
 
 export interface ProfileTipItem {
@@ -22,7 +23,7 @@ interface ProfileTipListProps {
   comments: (TipComment & { display_name: string; avatar_url: string | null })[];
 }
 
-export function ProfileTipList({ items }: ProfileTipListProps) {
+export function ProfileTipList({ items, viewerId, reactions }: ProfileTipListProps) {
   if (items.length === 0) {
     return (
       <p className="text-muted-foreground text-sm py-6 text-center">
@@ -49,6 +50,15 @@ export function ProfileTipList({ items }: ProfileTipListProps) {
             <p className="text-xs text-muted-foreground mt-1">
               Ergebnis: {it.homeScore} : {it.awayScore}
             </p>
+          )}
+          {it.hasStarted && (
+            <TipReactions
+              matchTipId={it.matchTipId}
+              viewerId={viewerId}
+              initial={reactions
+                .filter((r) => r.match_tip_id === it.matchTipId)
+                .map((r) => ({ emoji: r.emoji, user_id: r.user_id, display_name: r.display_name }))}
+            />
           )}
         </div>
       ))}

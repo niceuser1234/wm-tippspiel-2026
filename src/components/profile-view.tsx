@@ -4,7 +4,16 @@ import { withRanks } from "@/lib/rank";
 import { pointsForTip } from "@/lib/scoring";
 import { ProfileHeader } from "@/components/profile-header";
 import { ProfileTipList, type ProfileTipItem } from "@/components/profile-tip-list";
-import type { Match } from "@/types/database";
+import type { Match, TipReaction } from "@/types/database";
+
+interface ReactionRaw {
+  id: string;
+  match_tip_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+  profiles: { display_name: string } | null;
+}
 
 interface TipRow {
   id: string;
@@ -89,6 +98,20 @@ export async function ProfileView({ targetId, viewerId }: ProfileViewProps) {
 
   const hitRatePct = scored === 0 ? null : Math.round((scoredHits / scored) * 100);
 
+  // Reaktionen für die sichtbaren Tipps des Ziel-Users
+  const targetTipIds = targetTips.map((t) => t.id);
+  let reactions: (TipReaction & { display_name: string })[] = [];
+  if (targetTipIds.length) {
+    const { data } = await supabase
+      .from("tip_reactions")
+      .select("*, profiles(display_name)")
+      .in("match_tip_id", targetTipIds);
+    reactions = ((data as ReactionRaw[] | null) ?? []).map((r) => ({
+      id: r.id, match_tip_id: r.match_tip_id, user_id: r.user_id, emoji: r.emoji, created_at: r.created_at,
+      display_name: r.profiles?.display_name ?? "Unbekannt",
+    }));
+  }
+
   return (
     <div className="px-4 py-6 max-w-lg mx-auto space-y-5">
       <ProfileHeader
@@ -102,7 +125,7 @@ export async function ProfileView({ targetId, viewerId }: ProfileViewProps) {
         exactCount={me?.exact_count ?? 0}
         hitRatePct={hitRatePct}
       />
-      <ProfileTipList items={items} viewerId={viewerId} reactions={[]} comments={[]} />
+      <ProfileTipList items={items} viewerId={viewerId} reactions={reactions} comments={[]} />
     </div>
   );
 }
