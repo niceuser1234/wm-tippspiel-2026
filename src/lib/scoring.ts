@@ -50,6 +50,31 @@ export function calcMatchPoints(
   return 0;
 }
 
+/** Kleinste Tor-Distanz unter den NICHT-exakten Tipps eines Spiels.
+ *  Infinity, wenn es keine nicht-exakten Tipps gibt. */
+export function closestDistance(
+  tips: { home_tip: number; away_tip: number }[],
+  result: { home_score: number; away_score: number }
+): number {
+  let min = Infinity;
+  for (const t of tips) {
+    if (!isExactTip(t, result)) min = Math.min(min, tipDistance(t, result));
+  }
+  return min;
+}
+
+/** Punkte eines einzelnen Tipps, gegeben ALLE Tipps des Spiels (für "am nächsten dran"). */
+export function pointsForTip(
+  tip: { home_tip: number; away_tip: number },
+  result: { home_score: number; away_score: number },
+  allTipsForMatch: { home_tip: number; away_tip: number }[]
+): MatchPoints {
+  const isClosest =
+    !isExactTip(tip, result) &&
+    tipDistance(tip, result) === closestDistance(allTipsForMatch, result);
+  return calcMatchPoints(tip, result, isClosest);
+}
+
 /** CSS-Klassen für Punkte-Badges — wm-pts-System aus globals.css. */
 export const POINTS_COLORS: Record<MatchPoints, string> = {
   7: "wm-pts wm-pts--4 badge-exact",

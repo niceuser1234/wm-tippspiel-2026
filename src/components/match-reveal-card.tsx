@@ -10,7 +10,7 @@
  * umgeht, liefert die DB vor Anpfiff nur die eigene Zeile zurück.
  */
 
-import { calcMatchPoints, POINTS_COLORS, tipDistance, isExactTip } from "@/lib/scoring";
+import { calcMatchPoints, POINTS_COLORS, tipDistance, isExactTip, closestDistance } from "@/lib/scoring";
 import { TeamLabel } from "@/components/team-label";
 import { Avatar } from "@/components/avatar";
 import type { Match } from "@/types/database";
@@ -124,14 +124,7 @@ export function MatchRevealCard({
           const result = hasResult
             ? { home_score: match.home_score!, away_score: match.away_score! }
             : null;
-          let minDist = Infinity;
-          if (result) {
-            for (const t of tips) {
-              if (!isExactTip(t, result)) {
-                minDist = Math.min(minDist, tipDistance(t, result));
-              }
-            }
-          }
+          const minDist = result ? closestDistance(tips, result) : Infinity;
           return (
           <div className="mt-3 space-y-1.5">
             {tips.map((tip) => {
