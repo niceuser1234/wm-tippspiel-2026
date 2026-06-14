@@ -3,49 +3,13 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { uploadAvatar } from "@/lib/avatar-upload";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const MAX_LEN = 30;
-const AVATAR_SIZE = 256; // Zielkantenlänge des quadratischen Avatars
-
-/** Bild laden, mittig quadratisch zuschneiden, auf AVATAR_SIZE skalieren → WebP-Blob. */
-async function resizeToSquareWebp(file: File): Promise<Blob> {
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("Datei konnte nicht gelesen werden"));
-    reader.readAsDataURL(file);
-  });
-
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = () => reject(new Error("Bild konnte nicht geladen werden"));
-    i.src = dataUrl;
-  });
-
-  const side = Math.min(img.width, img.height);
-  const sx = (img.width - side) / 2;
-  const sy = (img.height - side) / 2;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = AVATAR_SIZE;
-  canvas.height = AVATAR_SIZE;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas nicht verfügbar");
-  ctx.drawImage(img, sx, sy, side, side, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
-
-  return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error("Konvertierung fehlgeschlagen"))),
-      "image/webp",
-      0.85
-    );
-  });
-}
 
 export default function WillkommenPage() {
   const router = useRouter();
@@ -105,21 +69,14 @@ export default function WillkommenPage() {
 
     try {
       // 1. Bild verkleinern + hochladen
-      const blob = await resizeToSquareWebp(file);
-      const path = `${user.id}/${Date.now()}.webp`;
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(path, blob, { contentType: "image/webp", upsert: true });
-
-      if (uploadError) {
+      let publicUrl: string;
+      try {
+        publicUrl = await uploadAvatar(supabase, user.id, file);
+      } catch {
         setError("Bild-Upload fehlgeschlagen. Versuch's nochmal.");
         setLoading(false);
         return;
       }
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(path);
 
       // 2. Profil aktualisieren (Name + Bild-URL)
       const { error: updateError } = await supabase
