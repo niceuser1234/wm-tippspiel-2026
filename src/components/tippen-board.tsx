@@ -52,8 +52,14 @@ export function TippenBoard({
 
   const allBetsCount = mainBets.length + groupWinnerBets.length;
   const total = matches.length + allBetsCount;
-  const done = doneMatches.size + doneBets.size;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  // Nur OFFENE Items zählen. doneMatches/doneBets enthalten auch Tipps für
+  // bereits angepfiffene Spiele / gesperrte Wetten, die nicht mehr in `total`
+  // stehen — sonst kann done > total werden (z.B. 29 von 27 → 107 %).
+  const done =
+    matches.filter((m) => doneMatches.has(m.id)).length +
+    mainBets.filter((b) => doneBets.has(b.id)).length +
+    groupWinnerBets.filter((b) => doneBets.has(b.id)).length;
+  const pct = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
 
   const hasAnything = total > 0;
 
