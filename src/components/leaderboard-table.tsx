@@ -1,6 +1,8 @@
+import Link from "next/link";
 import type { LeaderboardRow } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/avatar";
+import { withRanks } from "@/lib/rank";
 
 interface LeaderboardTableProps {
   rows: LeaderboardRow[];
@@ -18,27 +20,8 @@ export function LeaderboardTable({
   rows,
   currentUserId,
 }: LeaderboardTableProps) {
-  // Ränge berechnen: Gleichstand = geteilter Rang
-  interface RowWithRank extends LeaderboardRow {
-    rank: number;
-  }
-
-  // for-Loop statt map(): rowsWithRanks[i-1] muss lesbar sein bevor das Array fertig ist
-  const rowsWithRanks: RowWithRank[] = [];
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    let rank = i + 1;
-    if (i > 0) {
-      const prev = rows[i - 1];
-      if (
-        prev.total_points === row.total_points &&
-        prev.exact_count === row.exact_count
-      ) {
-        rank = rowsWithRanks[i - 1].rank;
-      }
-    }
-    rowsWithRanks.push({ ...row, rank });
-  }
+  // Ränge berechnen: Gleichstand = geteilter Rang (Logik in lib/rank)
+  const rowsWithRanks = withRanks(rows);
 
   const getMedalOrRank = (rank: number): string => {
     switch (rank) {
@@ -90,13 +73,24 @@ export function LeaderboardTable({
 
                 {/* Name + Avatar + paid Indikator */}
                 <td>
-                  <div className="flex items-center gap-2.5">
-                    <Avatar name={displayName} url={row.avatar_url} size={32} />
-                    <span className="font-medium text-night">{displayName}</span>
-                    {row.paid && (
-                      <span title="Zahler" className="text-lg">💰</span>
-                    )}
-                  </div>
+                  {row.id ? (
+                    <Link
+                      href={`/spieler/${row.id}`}
+                      className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar name={displayName} url={row.avatar_url} size={32} />
+                      <span className="font-medium text-night underline-offset-2 hover:underline">
+                        {displayName}
+                      </span>
+                      {row.paid && <span title="Zahler" className="text-lg">💰</span>}
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2.5">
+                      <Avatar name={displayName} url={row.avatar_url} size={32} />
+                      <span className="font-medium text-night">{displayName}</span>
+                      {row.paid && <span title="Zahler" className="text-lg">💰</span>}
+                    </div>
+                  )}
                 </td>
 
                 {/* Spieltipps (hidden auf mobile) */}

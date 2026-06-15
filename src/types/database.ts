@@ -73,6 +73,22 @@ export interface LeaderboardRow {
   avatar_url: string | null;
 }
 
+export interface TipReaction {
+  id: string;
+  match_tip_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+}
+
+export interface TipComment {
+  id: string;
+  match_tip_id: string;
+  author_id: string;
+  body: string;
+  created_at: string;
+}
+
 /** Supabase-Database-Typ für createClient<Database>. Inline-Typen sind Pflicht
  *  damit die column-select-Typ-Inferenz von supabase-js nicht auf `never` fällt. */
 export interface Database {
@@ -214,6 +230,24 @@ export interface Database {
           answer?: string;
           created_at?: string;
         };
+        Relationships: [];
+      };
+      tip_reactions: {
+        Row:    { id: string; match_tip_id: string; user_id: string; emoji: string; created_at: string };
+        Insert: { id?: string; match_tip_id: string; user_id: string; emoji: string; created_at?: string };
+        Update: { id?: string; match_tip_id?: string; user_id?: string; emoji?: string; created_at?: string };
+        Relationships: [];
+      };
+      tip_comments: {
+        Row:    { id: string; match_tip_id: string; author_id: string; body: string; created_at: string };
+        Insert: { id?: string; match_tip_id: string; author_id: string; body: string; created_at?: string };
+        Update: { id?: string; match_tip_id?: string; author_id?: string; body?: string; created_at?: string };
+        Relationships: [];
+      };
+      feature_requests: {
+        Row:    { id: string; user_id: string; body: string; created_at: string };
+        Insert: { id?: string; user_id: string; body: string; created_at?: string };
+        Update: { id?: string; user_id?: string; body?: string; created_at?: string };
         Relationships: [];
       };
     };
