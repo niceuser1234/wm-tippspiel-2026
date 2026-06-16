@@ -2,11 +2,15 @@
 
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+// Öffentlicher hCaptcha-Sitekey — darf im Client stehen. Der Secret-Key liegt nur in Supabase.
+const HCAPTCHA_SITEKEY = "d7889e3a-cb08-461c-8f74-d9d0bf2623e8";
 
 function LoginForm() {
   const router = useRouter();
@@ -19,6 +23,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const captchaRef = useRef<HCaptcha>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   // Mobile-Autoplay des Hintergrundvideos erzwingen (siehe Kommentar unten).
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,15 +69,25 @@ function LoginForm() {
       setError("Das Passwort braucht mindestens 8 Zeichen.");
       return;
     }
+    if (!captchaToken) {
+      setError("Bitte bestätige kurz, dass du kein Bot bist.");
+      return;
+    }
 
     setLoading(true);
     const supabase = createClient();
 
     if (mode === "register") {
-      const { error: authError } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email: mail,
         password,
+        options: {
+          captchaToken,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?next=/tippen`,
+        },
       });
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
       if (authError) {
         if (authError.message.toLowerCase().includes("already registered")) {
           setError("Diese E-Mail ist schon registriert — bitte einloggen.");
@@ -82,11 +98,22 @@ function LoginForm() {
         setLoading(false);
         return;
       }
+      // E-Mail-Bestätigung aktiv: bis der Link geklickt ist, gibt es keine Session.
+      if (!data.session) {
+        setInfo(
+          "Fast geschafft! Wir haben dir eine Bestätigungs-Mail geschickt. Klick den Link darin, dann bist du dabei."
+        );
+        setLoading(false);
+        return;
+      }
     } else {
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: mail,
         password,
+        options: { captchaToken },
       });
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
       if (authError) {
         setError("E-Mail oder Passwort ist falsch.");
         setLoading(false);
@@ -104,13 +131,20 @@ function LoginForm() {
       setError("Bitte gib zuerst deine E-Mail oben ein.");
       return;
     }
+    if (!captchaToken) {
+      setError("Bitte löse zuerst kurz das Captcha unten.");
+      return;
+    }
     setError(null);
     setInfo(null);
     setLoading(true);
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(mail, {
+      captchaToken,
       redirectTo: `${window.location.origin}/auth/confirm?next=/passwort-neu`,
     });
+    captchaRef.current?.resetCaptcha();
+    setCaptchaToken(null);
     setLoading(false);
     if (resetError) {
       setError("Reset-Mail konnte nicht gesendet werden.");
@@ -199,10 +233,20 @@ function LoginForm() {
               {error && <p className="text-sm text-destructive">{error}</p>}
               {info && <p className="text-sm text-[#15803d] font-medium">{info}</p>}
 
+              <div className="flex justify-center">
+                <HCaptcha
+                  ref={captchaRef}
+                  sitekey={HCAPTCHA_SITEKEY}
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                />
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-primary text-primary-foreground"
-                disabled={loading || !email || !password}
+                disabled={loading || !email || !password || !captchaToken}
               >
                 {loading
                   ? "Einen Moment…"
