@@ -21,6 +21,7 @@ export interface FixtureInsert {
 export interface FixturePlan {
   inserts: FixtureInsert[];
   skipped_existing: number;
+  skipped_past: number;
   not_yet_concrete: Array<{ round: string | null; home: string; away: string }>;
   unmapped: string[];
 }
@@ -38,9 +39,10 @@ function pairKey(stage: Stage, a: string, b: string): string {
 export function planFixtureInserts(
   events: EspnEvent[],
   existing: ExistingMatch[],
+  nowIso: string,
 ): FixturePlan {
   const plan: FixturePlan = {
-    inserts: [], skipped_existing: 0, not_yet_concrete: [], unmapped: [],
+    inserts: [], skipped_existing: 0, skipped_past: 0, not_yet_concrete: [], unmapped: [],
   };
 
   // Seed the "seen" set with knockout rows already in the DB -> idempotent re-runs.
@@ -62,6 +64,10 @@ export function planFixtureInserts(
     }
     if (!e.date) { // mapped teams but no kickoff -> can't satisfy NOT NULL column
       plan.not_yet_concrete.push({ round: e.round, home: e.homeName, away: e.awayName });
+      continue;
+    }
+    if (e.date <= nowIso) { // already kicked off -> not bettable, don't add a ghost row
+      plan.skipped_past++;
       continue;
     }
 
