@@ -12,7 +12,9 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    ignores: [".next/**", "out/**", "build/**", "next-env.d.ts"],
+    // supabase/functions are Deno (esm.sh imports, .ts specifiers) — not part of
+    // the Next build, mirroring /supabase in .vercelignore.
+    ignores: [".next/**", "out/**", "build/**", "next-env.d.ts", "supabase/**"],
   },
 ];
 
