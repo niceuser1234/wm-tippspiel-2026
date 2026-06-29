@@ -24,9 +24,11 @@ const ROUND_TO_STAGE: Record<string, Stage> = {
   "final": "final",
 };
 
-export function mapRoundToStage(headline: string | null | undefined): Stage | null {
-  if (!headline) return null;
-  return ROUND_TO_STAGE[headline] ?? null;
+// The round slug comes from `event.season.slug` (e.g. "round-of-32"); ESPN's
+// per-competition `notes[0].headline` is empty for this feed.
+export function mapRoundToStage(slug: string | null | undefined): Stage | null {
+  if (!slug) return null;
+  return ROUND_TO_STAGE[slug] ?? null;
 }
 
 // English (ESPN) -> German (DB) team names.
@@ -157,10 +159,11 @@ export function parseEspnEvents(json: any): EspnEvent[] {
     if (!home?.team?.displayName || !away?.team?.displayName) continue;
     const hs = parseInt(home.score, 10);
     const as = parseInt(away.score, 10);
-    const headline: string | null = comp?.notes?.[0]?.headline ?? null;
+    // Round comes from event.season.slug; fall back to notes headline just in case.
+    const round: string | null = ev?.season?.slug ?? comp?.notes?.[0]?.headline ?? null;
     out.push({
-      round: headline,
-      stage: mapRoundToStage(headline),
+      round,
+      stage: mapRoundToStage(round),
       completed: Boolean(comp?.status?.type?.completed),
       homeName: home.team.displayName,
       awayName: away.team.displayName,

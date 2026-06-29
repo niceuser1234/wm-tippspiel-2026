@@ -38,8 +38,9 @@ test("parseEspnEvents flattens scheduled + finished events", () => {
     events: [
       {
         date: "2026-06-29T20:30Z",
+        season: { slug: "round-of-32" },
         competitions: [{
-          notes: [{ headline: "round-of-32" }],
+          notes: [],
           status: { type: { completed: false } },
           competitors: [
             { homeAway: "home", score: "0", team: { displayName: "Germany" } },
@@ -49,8 +50,9 @@ test("parseEspnEvents flattens scheduled + finished events", () => {
       },
       {
         date: "2026-06-14T17:00Z",
+        season: { slug: "group-stage" },
         competitions: [{
-          notes: [{ headline: "group-stage" }],
+          notes: [],
           status: { type: { completed: true } },
           competitors: [
             { homeAway: "home", score: "3", team: { displayName: "Germany" } },
