@@ -83,7 +83,10 @@ export function pointsForTip(
   result: { home_score: number; away_score: number },
   allTipsForMatch: { home_tip: number; away_tip: number }[]
 ): MatchPoints {
+  // 5 Punkte gibt es nur wenn NIEMAND das exakte Ergebnis getippt hat
+  const anyoneExact = allTipsForMatch.some((t) => isExactTip(t, result));
   const isClosest =
+    !anyoneExact &&
     !isExactTip(tip, result) &&
     tendencyMatches(tip, result) &&
     tipDistance(tip, result) === closestDistance(allTipsForMatch, result);

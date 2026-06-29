@@ -120,17 +120,19 @@ export function MatchRevealCard({
 
         {/* NACH ANPFIFF — Tips-Grid */}
         {hasStarted && tips && tips.length > 0 && (() => {
-          // "Am nächsten dran": kleinste Tor-Distanz unter den nicht-exakten Tipps
+          // "Am nächsten dran": nur wenn NIEMAND exakt getippt hat
           const result = hasResult
             ? { home_score: match.home_score!, away_score: match.away_score! }
             : null;
-          const minDist = result ? closestDistance(tips, result) : Infinity;
+          const anyoneExact = result ? tips.some((t) => isExactTip(t, result)) : false;
+          const minDist = result && !anyoneExact ? closestDistance(tips, result) : Infinity;
           return (
           <div className="mt-3 space-y-1.5">
             {tips.map((tip) => {
               const isOwn = tip.user_id === currentUserId;
               const isClosest =
                 result !== null &&
+                !anyoneExact &&
                 !isExactTip(tip, result) &&
                 tipDistance(tip, result) === minDist;
               const pts = result ? calcMatchPoints(tip, result, isClosest) : null;

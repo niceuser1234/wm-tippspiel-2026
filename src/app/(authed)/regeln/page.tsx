@@ -46,7 +46,7 @@ export default async function RegelnPage() {
 
           <div className="flex flex-col gap-2.5">
             <RuleRow points="7" color="gold" title="Exaktes Ergebnis" desc="Du hast die genaue Tor­anzahl beider Teams richtig." />
-            <RuleRow points="5" color="green" title="Am nächsten dran" desc="Nur bei richtiger Tendenz: unter den Tipps mit richtigem Sieger/Unentschieden der mit der kleinsten Abweichung. Bei Gleichstand bekommen alle die 5." />
+            <RuleRow points="5" color="green" title="Am nächsten dran" desc="Nur wenn niemand das exakte Ergebnis getippt hat — dann zählt der Tipp mit der kleinsten Abweichung (nur bei richtiger Tendenz). Bei Gleichstand bekommen alle die 5." />
             <RuleRow points="3" color="lightgreen" title="Richtige Tendenz" desc="Sieger bzw. Unentschieden richtig getippt, aber nicht exakt und nicht am nächsten dran." />
             <RuleRow points="0" color="gray" title="Daneben" desc="Falsche Tendenz — auch wenn das Ergebnis rechnerisch nah dran war." />
           </div>
