@@ -19,6 +19,8 @@ test("mapTeam resolves English ESPN names to German DB names", () => {
   assert.equal(mapTeam("Paraguay"), "Paraguay");
   assert.equal(mapTeam("Ivory Coast"), "Elfenbeinküste");
   assert.equal(mapTeam("Congo DR"), "DR Kongo");
+  // Must match the frontend teams.ts flag key exactly ("-", not "und"), else ⚽ fallback.
+  assert.equal(mapTeam("Bosnia-Herzegovina"), "Bosnien-Herzegowina");
   assert.equal(mapTeam("Winner Group A"), undefined); // TBD placeholder
 });
 

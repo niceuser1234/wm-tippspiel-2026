@@ -116,7 +116,7 @@ export const TEAM_MAP: Record<string, string> = {
   "bahrain": "Bahrain",
   "oman": "Oman",
   "haiti": "Haiti",
-  "bosnia herzegovina": "Bosnien und Herzegowina",
+  "bosnia herzegovina": "Bosnien-Herzegowina",
 };
 
 // Lowercase, strip diacritics + punctuation, collapse whitespace.
